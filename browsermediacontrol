@@ -17,7 +17,8 @@ TITLE_LENGTH = 25
 MEDIA_ICONS = {
     'apple': '\uf302',
     'spotify': '\uf1bc',
-    'youtube': '\uf16a'
+    'youtube': '\uf16a',
+    'default': '\uf880'
 }
 PATTERN = '(' + '|'.join(MEDIA_ICONS.keys()) + ')'
 MEDIA_ICONS_REGEX = re.compile(PATTERN, re.MULTILINE)
@@ -51,41 +52,44 @@ def get_media_icon(url):
     if match:
         if len(match) == 1:
             return MEDIA_ICONS[match[0]]
-    return None
+    return MEDIA_ICONS['default']
 
-if Player.PlaybackStatus != "Stopped":
-    if args.volume != None:
-        vol = Player.Volume
-        Player.Volume = vol + (args.volume * 0.1)
-        exit()
-    if args.playpause:
-        Player.PlayPause()
-        exit()
-    if Player.PlaybackStatus=="Playing":
-        ICON = ICON_PAUSE
-        if os.path.isfile(PAUSE_LOCK_PATH):
-            os.remove(PAUSE_LOCK_PATH)
-    elif Player.PlaybackStatus=="Paused":
-        if not os.path.isfile(PAUSE_LOCK_PATH):
-            open(PAUSE_LOCK_PATH, 'w').close()
-        else:
-            _time = os.path.getctime(PAUSE_LOCK_PATH)
-            current_time = time.time()
-            if(((current_time - _time) / 60) >= 1):
-                print("") 
-                exit()
-        ICON = ICON_PLAY
-    if args.next:
-        Player.Next()
-    elif args.prev:
-        Player.Previous()
-    
-    if args.limit:
-        TITLE_LENGTH = args.limit
+try:
+    if Player.PlaybackStatus != "Stopped":
+        if args.volume != None:
+            vol = Player.Volume
+            Player.Volume = vol + (args.volume * 0.1)
+            exit()
+        if args.playpause:
+            Player.PlayPause()
+            exit()
+        if Player.PlaybackStatus=="Playing":
+            ICON = ICON_PAUSE
+            if os.path.isfile(PAUSE_LOCK_PATH):
+                os.remove(PAUSE_LOCK_PATH)
+        elif Player.PlaybackStatus=="Paused":
+            if not os.path.isfile(PAUSE_LOCK_PATH):
+                open(PAUSE_LOCK_PATH, 'w').close()
+            else:
+                _time = os.path.getctime(PAUSE_LOCK_PATH)
+                current_time = time.time()
+                if(((current_time - _time) / 60) >= 1):
+                    print("") 
+                    exit()
+            ICON = ICON_PLAY
+        if args.next:
+            Player.Next()
+        elif args.prev:
+            Player.Previous()
+        
+        if args.limit:
+            TITLE_LENGTH = args.limit
 
-    title = Player.Metadata["xesam:title"]
-    media_icon = get_media_icon(Player.Metadata["xesam:url"].lower())
-    output = action("prev", ICON_PREV) + " " + action("playpause", ICON) + " " + action("next", ICON_NEXT) + " | " + ( f"{media_icon}  " if media_icon else "" ) + truncate(title, TITLE_LENGTH)
-    print(output)
-else:
-    print("")
+        title = Player.Metadata["xesam:title"]
+        media_icon = get_media_icon(Player.Metadata["xesam:url"].lower())
+        output = action("prev", ICON_PREV) + " " + action("playpause", ICON) + " " + action("next", ICON_NEXT) + " | " + f"{media_icon}  " + truncate(title, TITLE_LENGTH)
+        print(output)
+    else:
+        print("")
+except:
+    exit()
