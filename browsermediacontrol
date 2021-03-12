@@ -5,6 +5,7 @@ import sys
 import os
 import argparse
 import re
+import time
 
 ICON_PLAY = "\uf144"
 ICON_PAUSE = "\uf28b"
@@ -20,6 +21,7 @@ MEDIA_ICONS = {
 }
 PATTERN = '(' + '|'.join(MEDIA_ICONS.keys()) + ')'
 MEDIA_ICONS_REGEX = re.compile(PATTERN, re.MULTILINE)
+PAUSE_LOCK_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.paused')
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--limit', type=int)
@@ -61,7 +63,17 @@ if Player.PlaybackStatus != "Stopped":
         exit()
     if Player.PlaybackStatus=="Playing":
         ICON = ICON_PAUSE
+        if os.path.isfile(PAUSE_LOCK_PATH):
+            os.remove(PAUSE_LOCK_PATH)
     elif Player.PlaybackStatus=="Paused":
+        if not os.path.isfile(PAUSE_LOCK_PATH):
+            open(PAUSE_LOCK_PATH, 'w').close()
+        else:
+            _time = os.path.getctime(PAUSE_LOCK_PATH)
+            current_time = time.time()
+            if(((current_time - _time) / 60) >= 1):
+                print("") 
+                exit()
         ICON = ICON_PLAY
     if args.next:
         Player.Next()
